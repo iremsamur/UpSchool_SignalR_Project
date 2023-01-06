@@ -1,0 +1,119 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+@section Scripts{
+    <script>
+        $(document).ready(()=>{
+            var connection = new signalR.HubConnectionBuilder()
+            .withAutomaticReconnect([1000,2000,3000,8000]).
+            //with automatic reconnect bağlantı koptuğunda otomatik yeniden bağlantı isteği atar.
+               //içine verdiğim sürelerde, verilen sürelerde ayağa kaldırmayı denemesini sağlayabiliriz
+               //bağlantı koptuğunda 1.saniyede 2,saniye, 3.saniye, 8.saniye istek atsın. ve 4 defa istek atsın 
+            withUrl("https://localhost:44369/MyHub").build();
+            //Bu adresteki 
+            //portu bir sunucu olarak kullan ve bunun üzerinden bir bağlantı oluştur.
+            //bağlantı olarak api adresi verilir. Apide oluşturduğumuz startupda 
+            // endpointtede 
+            //tanımladığımız MyHub'a gidecek yönlendirecek
+
+
+            function statusShow(){
+                //conStatus çok fazla tekrar ettiği için fonksiyon içinde yazalım.
+                $("#conStatus").text(connection.connectionState);//bağlandıktan sonraki
+                //durumunu yazdırır.
+
+            }
+            statusShow();//bağlantının durumunu yazar.
+            //connect, reconnect, disconnect gibi.
+
+            connection.start().then(()=>{
+                //bağlantıyı başlattıktan sonra
+              
+                //eğer hub connected olursa loading'i gizle
+                $("#loading").hide();
+            }).catch((err)=>{//hata varsa bağlantı sırasında catch ile yakalar
+                console.log(err)
+            });
+
+            //burada amaç butona tıklayınca sayfadan gönderdiğim ismi
+            //konsolda ekrana yazdırmak 
+
+            $("#btnSave").click(()=>{
+                connection.invoke("SendName",$("#txtName").val())
+                            .catch((err)=>{
+                                console.log(err)
+                            })
+            })
+            connection.on("ReceiveName",(name)=>{
+                //console.log(name);
+                //konsolda yazdırmak yerine tabloda html üzerinde yazdıralım
+                //alt gr+ ; ile `` ile backlink işareti içinde html yazıyoruz. javascript içinde
+
+                $("#namesList").append(`<li class="list-group-item">${name}</li>`)
+
+
+            })
+
+            connection.onreconnecting(err=>{
+                //eğer yeniden bağlanma sürecinde ise bunu bana göstersin
+                //yani bağlantı kesilip yeniden bağlanmaya çalışırsa bunu göstersin
+                $("#loading").show();
+                statusShow();
+                console.log(err);
+            })
+
+            connection.onreconnected(err=>{
+                //eğer yeniden bağlantı kurmayı başarırsa
+                $("#loading").hide();
+                statusShow();
+                console.log(err);
+            })
+
+          
+
+    
+        });
+    </script>
+
+}
+<div class="row">
+    <div class="col-md-8 offset-2">
+
+        <input type="text" class="form-control" id="txtName"/>
+        <hr />
+        <button class="btn btn-warning" id="btnSave">İsmi Kaydet</button>
+        
+        <div class="alert alert-info mt-2">
+            <div class="float-left">
+                Bağlantı Durumu : <strong id="conStatus"></strong>
+                <!--js içinde tanımladığım kısım-->
+                ,Client Sayısı : <strong id="clientCount"></strong>
+                <!--Buradaki client sayısı aktif kişi sayısını gösterecek sosyal medyada
+                    bu odada aktif online kaç kişi var gibi zoom gibi platformlarda
+                -->
+
+            </div>
+            <!--loading ekleyelim.-->
+            <div class="float-right">
+                <div id="loading" class="spinner-border" role="status">
+                    <span class="visually-hidden"></span>
+
+                </div>
+
+            </div>
+            <div class="clearfix">
+
+            </div>
+
+        </div>
+
+    </div>
+    <!--isimleri tabloda gösterme-->
+    <div class="col-md-8 offset-2">
+        <ul class="list-group" id="namesList"></ul>
+
+    </div>
+
+</div>
