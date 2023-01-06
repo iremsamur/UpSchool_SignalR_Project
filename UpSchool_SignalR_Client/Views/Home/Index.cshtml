@@ -30,9 +30,11 @@
 
             connection.start().then(()=>{
                 //bağlantıyı başlattıktan sonra
-              
+              statusShow();
                 //eğer hub connected olursa loading'i gizle
                 $("#loading").hide();
+                connection.invoke("GetNames");
+
             }).catch((err)=>{//hata varsa bağlantı sırasında catch ile yakalar
                 console.log(err)
             });
@@ -71,6 +73,51 @@
                 console.log(err);
             })
 
+            //on komutu ile her zaman bağlanırken MyHub class içinde verdiğim string ifadeyi yazalım.
+            //yani ReceiveClientCount ama Invoke ile yazdığımın içerisine method isimleri yazılır.
+            //OnConnectedAsync gibi.
+            //bağlanan istemci sayısını gösterecek. 
+            connection.on("ReceiveClientCount",(ClientCount)=>{
+                $("#clientCount").text(ClientCount);
+            })
+
+            //yine bağlantı atılacak
+            //bu defa Notify'a subscribe olacağım
+            //oda da kaç kişi bulunabileceğini (maximum) yazacak
+            connection.on("Notify",(countText)=>{
+                $("#notify").html(`<div class="alert alert-success">${countText}</div>`);
+            })
+
+            connection.on("Error",(errorText)=>{
+                alert(errorText);
+                //error text içeriği myhub'da yer alan SendName içindeki Error'dan gelecek
+            })
+            connection.on("ReceiveNames",(names)=>{
+                $("#namesList").empty();//önce nameslist'in içini boşalt
+                names.forEach((item,index)=>{
+                    $("#namesList").append(`<li class="list-group-item">${item}</li>`);
+                })
+            })
+
+            $("#btnroomname").click(()=>{
+                //bizim seçmiş olduğumuz radio daki değere göre o kişiyi ekleme yapacak
+                let name=$("#txtName").val()
+                let roomname=$("input[type=radio]:checked").val();
+
+                if(roomname==null){
+                    alert("Lütfen şehir seçimi yapınız");
+                }
+                else{
+                    connection.invoke("SendNameByGroup",name,roomname).catch((err)=>{
+                        console.log(err)
+                    })
+                }
+            })
+
+
+
+
+
           
 
     
@@ -84,6 +131,7 @@
         <input type="text" class="form-control" id="txtName"/>
         <hr />
         <button class="btn btn-warning" id="btnSave">İsmi Kaydet</button>
+        <button class="btn btn-primary" id="btnroomname">Odaya Kişi Ekle</button>
         
         <div class="alert alert-info mt-2">
             <div class="float-left">
@@ -109,6 +157,10 @@
 
         </div>
 
+        <div id="notify">
+
+        </div>
+
     </div>
     <!--isimleri tabloda gösterme-->
     <div class="col-md-8 offset-2">
@@ -116,4 +168,24 @@
 
     </div>
 
+</div>
+<div class="row">
+    <div class="col-md-8 offset-2">
+
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="roomgroup" value="Ankara"/>
+            <label class="form-check-label">Ankara Odası</label>
+
+        </div>
+
+         <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="roomgroup" value="İstanbul" />
+                <label class="form-check-label">İstanbul Odası</label>
+
+          </div>
+
+        
+
+
+    </div>
 </div>

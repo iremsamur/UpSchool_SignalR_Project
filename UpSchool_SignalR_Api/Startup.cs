@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UpSchool_SignalR_Api.Hubs;
+using UpSchool_SignalR_Api.Models;
 
 namespace UpSchool_SignalR_Api
 {
@@ -26,6 +28,10 @@ namespace UpSchool_SignalR_Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<Context>(options =>
+            {
+                options.UseSqlServer(Configuration["ConStr"]);
+            });
             services.AddCors();//cors için 
             services.AddSignalR();//signal r için 
             services.AddControllers();
