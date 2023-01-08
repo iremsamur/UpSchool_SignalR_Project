@@ -114,6 +114,39 @@
                 }
             })
 
+            //şehire göre eklenmiş odadaki kişiler yazdırılacak
+            //Burada veritabanına kişileri ekleyecen
+            connection.on("ReceiveMessageByGroup",(name,roomId)=>{
+                let listName;
+                if(roomId==1){
+                    listName="AnkaraRoomList"
+                }
+                else{
+                    listName="İstanbulRoomList"
+                }
+
+                $(`#${listName}`).append(`<li class="list-group-item">${name}</li>`)
+            })
+
+            //şimdi signalr üzerinden odalara ekleme çıkarma yapsın
+            //ve odalarda bulunna kişileride gösterecek signal r ile.
+            $("input[type=radio]").change(()=>{
+                let value = $(`input[type=radio]:checked`).val();//seçili radio butonun durumunu değiştirir.
+                if(value="Ankara"){
+                    //Ankara ise Ankara grubuna bağlanacak , hub signal r ile
+                    connection.invoke("AddToGroup",value);//C# kodundaki addtogrup stringe bağlanacak invoke ile
+                    connection.invoke("RemoveToGroup","İstanbul");//Diğer gruptanda çıkarmalı.
+                    //çünkü bir kişi aynı anda tek grupta olabilir. Yeni gruba katılmak istediğinde öncekinden 
+                    //çıkarılmalı
+                }
+                else{
+                    //istanbul içinde aynısı
+                    connection.invoke("AddToGroup", value);//C# kodundaki addtogrup stringe bağlanacak invoke ile
+                    connection.invoke("RemoveToGroup", "Ankara");//Diğer gruptanda çıkarmalı.
+                }
+            })
+
+
 
 
 
@@ -187,5 +220,23 @@
         
 
 
+    </div>
+    <!--odadaki kişiler yazdırılıyor.-->
+    <div class="col-md-8-offset-2">
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Ankara Odası</h3>
+                <ul class="list-group" id="AnkaraRoomList"></ul>
+
+            </div>
+
+            <div class="col-md-6">
+                <h3>İstanbuk Odası</h3>
+                <ul class="list-group" id="İstanbulRoomList"></ul>
+
+            </div>
+
+        </div>
+        
     </div>
 </div>
